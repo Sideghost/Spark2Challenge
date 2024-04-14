@@ -21,7 +21,8 @@ The App needs to use Maven as dependency manager.
 - [ ] Write documentation
 
 ## Links
-[Spark 2 Documentation](https://spark.apache.org/docs/2.4.5/sql-programming-guide.html)
-[Window](https://sparkbyexamples.com/spark/spark-sql-window-functions/#ranking-functions)
-[Data cleaning](https://louisazhou.gitbook.io/notes/spark/data-cleaning-with-apache-spark)
-[Spark 2 Documentation package](https://spark.apache.org/docs/2.4.5/api/scala/index.html#org.apache.spark.package)
+
+- [Spark 2 Documentation](https://spark.apache.org/docs/2.4.5/sql-programming-guide.html)
+- [Window](https://sparkbyexamples.com/spark/spark-sql-window-functions/#ranking-functions)
+- [Data cleaning](https://louisazhou.gitbook.io/notes/spark/data-cleaning-with-apache-spark)
+- [Spark 2 Documentation package](https://spark.apache.org/docs/2.4.5/api/scala/index.html#org.apache.spark.package)

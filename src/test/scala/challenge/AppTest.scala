@@ -1,0 +1,5 @@
+package challenge
+
+class AppTest {
+
+}
