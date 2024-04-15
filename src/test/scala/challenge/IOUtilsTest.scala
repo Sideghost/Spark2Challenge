@@ -75,8 +75,8 @@ class IOUtilsTest {
     )
 
     val df = simpleData.toDF("employee_name", "department", "salary")
-    IOUtils.writeParquetWithGZIP(df, "src/test/resources/test_output.parquet")
-    val df2 = sparkSession.read.parquet("src/test/resources/test_output.parquet")
+    IOUtils.writeParquetWithGZIP(df, "src/test/resources/test_output2.parquet")
+    val df2 = sparkSession.read.parquet("src/test/resources/test_output2.parquet")
     assert(df2.head() === df.head())
     assert(df2.count() == df.count())
     assert(df2.columns.length == df.columns.length)

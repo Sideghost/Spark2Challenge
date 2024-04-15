@@ -64,7 +64,7 @@ object App {
       .na.fill(0.0, Seq("Average_Sentiment_Polarity"))  // Fill NaN results with 0.0
 
     // saving the df_1 as a file
-    writeDFToCSV(df_1, "src/main/resources/output_df1")
+    writeDFToCSV(df_1, "src/main/resources/output_df1.csv")
 
     df_1
   }
@@ -92,7 +92,7 @@ object App {
       .sort($"Rating".desc)
 
     // saving the df_2 as a file
-    writeDFToCSV(df_2, "src/main/resources/best_apps")
+    writeDFToCSV(df_2, "src/main/resources/best_apps.csv")
   }
 
   /**
@@ -153,7 +153,7 @@ object App {
       .withColumn("Categories", $"Categories".cast(StringType))
       .withColumn("Genres", $"Genres".cast(StringType))
 
-    writeDFToCSV(df_3_string, "src/main/resources/output_df3")
+    writeDFToCSV(df_3_string, "src/main/resources/output_df3.csv")
 
     df_3_renamed
   }
@@ -174,7 +174,7 @@ object App {
     val combinedDf = df_2.join(df_1, Seq("App"), "left")
 
     // Write the result to a Parquet file with gzip compression
-    writeParquetWithGZIP(df = combinedDf, path = "src/main/resources/googleplaystore_cleaned")
+    writeParquetWithGZIP(df = combinedDf, path = "src/main/resources/googleplaystore_cleaned.parquet")
 
     combinedDf
   }
@@ -204,6 +204,6 @@ object App {
       )
 
     // Write the result to a Parquet file with gzip compression
-    writeParquetWithGZIP(df = genreMetricsDf, path = "src/main/resources/googleplaystore_metrics")
+    writeParquetWithGZIP(df = genreMetricsDf, path = "src/main/resources/googleplaystore_metrics.parquet")
   }
 }

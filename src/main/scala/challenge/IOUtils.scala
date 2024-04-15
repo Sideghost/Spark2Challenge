@@ -1,7 +1,9 @@
 package challenge
 
-import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import java.io.File
+import scala.io.Source
+import java.io.PrintWriter
 
 /**
  * Utility functions for reading and writing data
@@ -27,13 +29,30 @@ object IOUtils {
      * @param df the DataFrame
      * @param path the path to the CSV file
      */
-  def writeDFToCSV(df: DataFrame, path: String): Unit = {
-    df.coalesce(1)
-      .write
-      .mode("overwrite")
-      .option("header", "true")
-      .csv(path)
-  }
+    def writeDFToCSV(df: DataFrame, path: String): Unit = {
+      // Temporary directory to store CSV parts
+      val tempDir = "temp_csv"
+      df.coalesce(1)
+        .write
+        .mode("overwrite")
+        .option("header", "true")
+        .csv(tempDir)
+
+      // Directory object for the temporary directory
+      val directory = new File(tempDir)
+      val partFile = new File(directory.listFiles().filter(_.getName.startsWith("part")).head.getAbsolutePath)
+      val pw = new PrintWriter(new File(path))
+
+      // Write contents of the part file to the final CSV file
+      val src = Source.fromFile(partFile)
+      src.getLines.foreach(pw.println)
+      src.close()
+      pw.close()
+
+      // Clean up temporary files
+      directory.listFiles().foreach(_.delete())
+      directory.delete()
+    }
 
   /**
    * Write a DataFrame to a Parquet file with GZIP compression
