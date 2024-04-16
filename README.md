@@ -16,9 +16,9 @@ The App needs to use Maven as dependency manager.
 - [x] Read a CSV file
 - [x] Perform some operations on the data
 - [x] Export the result to a CSV file or Parquet file
-- [ ] Write tests
+- [x] Write tests
 - [ ] Add logging
-- [ ] Write documentation
+- [x] Write documentation
 
 ## Links
 

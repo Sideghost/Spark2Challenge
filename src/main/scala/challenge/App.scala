@@ -12,6 +12,8 @@ import org.apache.spark.sql.types.{ArrayType, DoubleType, LongType, StringType}
  */
 object App {
 
+  val baseResourcesPath = "src/main/resources/"
+
   /**
    * Main method to run the application.
    *
@@ -29,7 +31,7 @@ object App {
     part2(sparkSession)
     val df_3 = part3(sparkSession)
     val df_4 = part4(df_1, df_3)
-    part5(sparkSession, df_4)
+    part5(sparkSession, df_3)
 
     // Stop the SparkSession
     sparkSession.stop()
@@ -46,13 +48,13 @@ object App {
    * @param spark the SparkSession
    * @return
    */
-  private def part1(spark: SparkSession): DataFrame = {
+  def part1(spark: SparkSession): DataFrame = {
     // For implicit conversions like converting RDDs to DataFrames
     // how this works no idea
     import spark.implicits._
 
     // Load data from a CSV file
-    val df = readCSVToDF(spark, "src/main/resources/googleplaystore_user_reviews.csv")
+    val df = readCSVToDF(spark, baseResourcesPath + "googleplaystore_user_reviews.csv")
 
     // Select necessary columns and handle missing values
     val df_clean = df.select($"App", $"Sentiment_Polarity".cast("double"))
@@ -64,7 +66,7 @@ object App {
       .na.fill(0.0, Seq("Average_Sentiment_Polarity"))  // Fill NaN results with 0.0
 
     // saving the df_1 as a file
-    writeDFToCSV(df_1, "src/main/resources/output_df1.csv")
+    writeDFToCSV(df_1, baseResourcesPath + "output_df1.csv")
 
     df_1
   }
@@ -80,10 +82,10 @@ object App {
    *
    * @param spark the SparkSession
    */
-  private def part2(spark: SparkSession): Unit = {
+  def part2(spark: SparkSession): DataFrame = {
     import spark.implicits._
 
-    val df = readCSVToDF(spark, "src/main/resources/googleplaystore.csv")
+    val df = readCSVToDF(spark, baseResourcesPath + "googleplaystore.csv")
 
     // all Apps with a "Rating" greater or equal to 4.0 sorted in descending order.
     val df_2 = df.select($"App", $"Rating".cast(DoubleType))
@@ -92,7 +94,9 @@ object App {
       .sort($"Rating".desc)
 
     // saving the df_2 as a file
-    writeDFToCSV(df_2, "src/main/resources/best_apps.csv")
+    writeDFToCSV(df_2, baseResourcesPath + "best_apps.csv")
+
+    df_2
   }
 
   /**
@@ -106,16 +110,16 @@ object App {
    * 5. Rename columns.
    * 6. Convert arrays to strings for saving.
    * 7. Optionally, save the DataFrame to a file.
-   * TODO has a bug cause it doesnt properly delete duplicate apps
+   *
    * @param spark the SparkSession
    * @return the processed DataFrame
    */
-  private def part3(spark: SparkSession): DataFrame = {
+  def part3(spark: SparkSession): DataFrame = {
     // For implicit conversions like converting RDDs to DataFrames
     // how this works no idea
     import spark.implicits._
 
-    val df = readCSVToDF(spark, "src/main/resources/googleplaystore.csv")
+    val df = readCSVToDF(spark, baseResourcesPath + "googleplaystore.csv")
 
     // mapper to convert size to MB
     val sizeToMbUDF = udf(sizeToMb _)
@@ -123,10 +127,10 @@ object App {
     // Process the DataFrame to their correct types and formats
     val processedDf = df
       .withColumn("Category", $"Category".cast(StringType))
-      .withColumn("Rating", $"Rating".cast(DoubleType))
+      .withColumn("Rating", $"Rating".cast(DoubleType)).na.fill(0.0, Seq("Rating"))
       .withColumn("Reviews", $"Reviews".cast(LongType)).na.fill(0L, Seq("Reviews")) // Fill null reviews with 0
-      .withColumn("Size", sizeToMbUDF($"Size")) // Convert size to MB
-      .withColumn("Price", regexp_replace($"Price", "\\$", "").cast(DoubleType) * 0.9) // Convert price to EUR
+      .withColumn("Size", sizeToMbUDF($"Size")).na.fill(0.0, Seq("Size")) // Convert size to MB
+      .withColumn("Price", regexp_replace($"Price", "\\$", "").cast(DoubleType) * 0.9).na.fill(0.0, Seq("Price")) // Convert price to EUR
       .withColumn("Last Updated", to_date($"Last Updated", "MMMM dd, yyyy")) // Convert date to DateType
       .withColumn("Genres", split($"Genres", ";").cast(ArrayType(StringType)))
 
@@ -153,7 +157,7 @@ object App {
       .withColumn("Categories", $"Categories".cast(StringType))
       .withColumn("Genres", $"Genres".cast(StringType))
 
-    writeDFToCSV(df_3_string, "src/main/resources/output_df3.csv")
+    writeDFToCSV(df_3_string, baseResourcesPath + "output_df3.csv")
 
     df_3_renamed
   }
@@ -169,12 +173,12 @@ object App {
    * @param df_2 the DataFrame from Part 3
    * @return the combined DataFrame
    */
-  private def part4(df_1: DataFrame, df_2: DataFrame): DataFrame = {
+  def part4(df_1: DataFrame, df_2: DataFrame): DataFrame = {
     // Join the DataFrames on the "App" column
     val combinedDf = df_2.join(df_1, Seq("App"), "left")
 
     // Write the result to a Parquet file with gzip compression
-    writeParquetWithGZIP(df = combinedDf, path = "src/main/resources/googleplaystore_cleaned.parquet")
+    writeParquetWithGZIP(df = combinedDf, path = baseResourcesPath + "googleplaystore_cleaned.parquet")
 
     combinedDf
   }
@@ -185,11 +189,11 @@ object App {
    * 1. Create a column for each genre associated with an app.
    * 2. Group by 'Genre' and calculate metrics.
    * 3. Write the result to a Parquet file with gzip compression.
-   *
+   * TODO its not possible because theres no sentiment polarity in the df
    * @param spark the SparkSession
    * @param df the DataFrame from Part 4
    */
-  private def part5(spark: SparkSession, df: DataFrame): Unit = {
+  def part5(spark: SparkSession, df: DataFrame): DataFrame = {
     import spark.implicits._
 
     // Explode the 'Genres' array to create a row for each genre associated with an app
@@ -204,6 +208,8 @@ object App {
       )
 
     // Write the result to a Parquet file with gzip compression
-    writeParquetWithGZIP(df = genreMetricsDf, path = "src/main/resources/googleplaystore_metrics.parquet")
+    writeParquetWithGZIP(df = genreMetricsDf, path = baseResourcesPath + "googleplaystore_metrics.parquet")
+
+    genreMetricsDf
   }
 }
